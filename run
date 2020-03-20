@@ -1,4 +1,5 @@
 ./build
 
-#./stop
+pushd server
 node ./server.js
+popd

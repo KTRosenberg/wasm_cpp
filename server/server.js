@@ -40,7 +40,7 @@ parser.addArgument(
     ['-root', '--rootdir'],
     {
         help: 'set root directory',
-        defaultValue: './'
+        defaultValue: '../'
     }
 )
 
