@@ -1,0 +1,4 @@
+rm output.wasm
+rm a.out.*
+rm index.wasm
+

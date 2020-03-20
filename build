@@ -1,0 +1,15 @@
+em++ source.cpp \
+--std=c++17 \
+-flto \
+-fno-exceptions \
+-Os \
+-I/usr/local/opt/glm/include \
+-o output.js \
+-s EMIT_EMSCRIPTEN_METADATA=1 \
+-s TOTAL_STACK=5242880 \
+-s TOTAL_MEMORY=2147418112 \
+-s "EXPORTED_FUNCTIONS=['_animate']" \
+-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+-s STANDALONE_WASM \
+-s ALLOW_MEMORY_GROWTH=0 \
+#-msimd128 -mbulk-memory \

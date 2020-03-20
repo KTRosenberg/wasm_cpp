@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- malloc_copy.html -->
+<html>
+  <head></head>
+  <body>
+    <script type="module">
+
+        "use strict";
+
+      import * as WASM from "./wasm.js";
+
+      const pageSize = WASM.PAGE_SIZE;
+      function heuristicIsBrowser64Bit() {
+        function contains(str, substrList) { for(var i in substrList) if (str.indexOf(substrList[i]) != -1) return true; return false; }
+        var ua = (navigator.userAgent + ' ' + navigator.oscpu + ' ' + navigator.platform).toLowerCase();
+        if (contains(ua, ['wow64'])) return false; // 32bit browser on 64bit OS
+        if (contains(ua, ['x86_64', 'amd64', 'ia64', 'win64', 'x64', 'arm64', 'irix64', 'mips64', 'ppc64', 'sparc64'])) return true;
+        if (contains(ua, ['i386', 'i486', 'i586', 'i686', 'x86', 'arm7', 'android', 'mobile', 'win32'])) return false;
+        if (contains(ua, ['intel mac os'])) return true;
+        return false;
+      }
+      var heuristicIs64Bit = heuristicIsBrowser64Bit();
+      function alignPageUp(size) { return pageSize * Math.ceil(size / pageSize); }
+
+        const MAX_MEMORY = 2048 * 1024 * 1024 - pageSize;
+
+
+        (async () => {
+          try {
+
+            // Uses bulk-memory and simd extensions
+            function wasmDetectSIMD() {
+                const detector = new Uint8Array([0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,3,2,0,0,5,3,1,0,1,12,1,0,10,22,2,12,0,65,0,65,0,65,0,252,10,0,0,11,7,0,65,0,253,4,26,11]);
+                if (WebAssembly.validate(detector)) {
+                    console.warn("Warning: using experimental SIMD support");
+                }
+            }
+            wasmDetectSIMD();
+
+            const wasmInfo = {
+                instance   : null,
+                memoryHeap : null,
+                env        : {},
+                wasi_snapshot_preview1 : { 
+                    proc_exit : (arg0, arg1) => { 
+                        console.log(arg0, arg1); 
+                    },
+                    fd_write : (output) => {
+                        console.log("TODO fd_write:", output);
+                    },
+                    fd_seek : (output) => {
+                        console.log("TODO fd_seek:", output);
+                    },
+                    fd_close : (output) => {
+                        console.log("TODO fd_close:", output);
+                    }
+                }
+            };
+
+            //wasmInfo.env.memory = mem;
+            // wasmInfo.env.emscripten_notify_memory_growth = function(index) {
+            //     wasmInfo.memoryHeap = new Uint8Array(
+            //         wasmInfo.instance.exports.memory.buffer
+            //     );
+            //     console.log("memory heap size", wasmInfo.memoryHeap.byteLength);                
+            // };
+
+            wasmInfo.env["hello_js"] = () => {
+                //console.log("in js, call from wasm");
+            }
+
+            const wasmLoadResult = await WebAssembly.instantiateStreaming(
+                fetch("./output.wasm"), 
+                {
+                    env : wasmInfo.env,
+                    wasi_snapshot_preview1 : wasmInfo.wasi_snapshot_preview1
+                }
+            );
+
+            wasmInfo.instance = wasmLoadResult.instance;
+            //wasmInfo.env.emscripten_notify_memory_growth(0);
+
+            console.log(wasmInfo.instance);
+            console.log(wasmInfo.instance.exports);
+
+            function animate(t) {
+                requestAnimationFrame(animate);
+
+                try {
+                    console.log(wasmInfo.instance.exports.animate(t));
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            requestAnimationFrame(animate);
+
+          } catch (err) {
+            console.error(err);
+          }
+          // Should free outputPtr and inputPtr
+        })();
+
+        // Encode string into memory starting at address baseAddr.
+        // const encode = (memory, baseAddr, string) => {
+        //   for (let i = 0; i < string.length; i++) {
+        //     memory[baseAddr + i] = string.charCodeAt(i);
+        //   }
+
+        //   memory[baseAddr + string.length] = 0;
+        // };
+
+        // // Decode a string from memory starting at address baseAddr.
+        // const decode = (memory, baseAddr) => {
+        //   let cursor = baseAddr;
+        //   let result = '';
+
+        //   while (memory[cursor] !== 0) {
+        //     result += String.fromCharCode(memory[cursor++]);
+        //   }
+
+        //   return result;
+        // };
+    </script>
+
+  </body>
+</html>

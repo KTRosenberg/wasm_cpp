@@ -1,0 +1,4 @@
+./build
+
+#./stop
+node ./server.js
