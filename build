@@ -4,11 +4,11 @@ em++ source.cpp \
 -fno-exceptions \
 -Os \
 -I/usr/local/opt/glm/include \
--o output.js \
+-o output.wasm \
 -s EMIT_EMSCRIPTEN_METADATA=1 \
 -s TOTAL_STACK=5242880 \
 -s TOTAL_MEMORY=2147418112 \
--s "EXPORTED_FUNCTIONS=['_animate']" \
+-s "EXPORTED_FUNCTIONS=['_animate', '_heap_base_ptr', '_data_end_ptr']" \
 -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 -s STANDALONE_WASM \
 -s ALLOW_MEMORY_GROWTH=0 \
