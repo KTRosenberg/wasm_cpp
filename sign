@@ -1,0 +1,1 @@
+openssl req -x509 -days 100 -out server.crt -keyout server.key -newkey rsa:2048 -nodes -sha256 -subj '/CN=TRmbpro' -extensions EXT -config <( printf "[dn]\nCN=TRmbpro\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:192.168.1.164\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")

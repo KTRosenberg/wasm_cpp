@@ -2,6 +2,8 @@ const fs        = require('fs');
 const express   = require('express');
 const argparse  = require('argparse');
 const path      = require('path');
+const WebSocket = require('ws')
+const basicAuth = require('express-basic-auth');
 
 /*
     Basic server for hosting the page
@@ -51,11 +53,15 @@ const host       = args.host;
 const port       = parseInt(args.port);
 const systemRoot = args.rootdir;
 
+args.enablessl = true;
+console.log("enabled ssl:", args.enablessl);
+
+
 // currently unused options for SSL
 const options = {
-  //key: fs.readFileSync(path.join(__dirname, 'server.key')),
-  //cert: fs.readFileSync(path.join(__dirname, 'server.crt')),
-  requestCert: false,
+  key: ((args.enablessl) ? fs.readFileSync(path.join(__dirname, 'server.key')) : ''),
+  cert: ((args.enablessl) ? fs.readFileSync(path.join(__dirname, 'server.crt')) : ''),
+  requestCert: true,
   rejectUnauthorized: false
 };
 
@@ -80,10 +86,19 @@ app.all('/', function(req, res, next) {
 
 if (!args.enablessl) {
     app.listen(port, () => {
-        console.log('server listening on port ' + port);
+        console.log('http server listening on port ' + port);
     });
 } else {
-    server.listen(port, () => {
-        console.log('server listening on port ' + server.address().port);
+    server.listen(443, () => {
+        console.log('https server listening on port ' + server.address().port);
     });
 }
+
+const wss = new WebSocket.Server({ port: 444, server: server});
+console.log("WEE");
+wss.on('connection', ws => {
+  ws.on('message', message => {
+    console.log(`Received message => ${message}`)
+  })
+  ws.send('hi')
+})
