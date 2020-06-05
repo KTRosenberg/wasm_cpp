@@ -1,9 +1,18 @@
 <!DOCTYPE html>
-<!-- malloc_copy.html -->
 <html>
-  <head></head>
+  <head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-height, height=device-width, 
+  user-scalable=no, maximum-scale=1, minimum-scale=1" />
+<!--   target-densitydpi=device-dpi,  -->
+</head>
   <body>
+    <div id='d1' style="position:absolute; top:0px; left:0px; z-index:1">  
     <canvas id="myCanvas" width="200" height="100"></canvas>
+    </div>
+
     <script type="module">
 
         "use strict";
@@ -48,13 +57,64 @@ document.body.onclick = function() {
 };
 
 const canvas = document.getElementById("myCanvas");
-canvas.width = document.body.clientWidth;
-canvas.height = document.body.clientHeight;
+const realToCSSPixels = window.devicePixelRatio;
+canvas.width = screen.width * realToCSSPixels;
+canvas.height = screen.height * realToCSSPixels;
 const ctx = canvas.getContext('2d');
 ctx.fillStyle = 'orange';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-const socket = new WebSocket("wss://192.168.1.164:444");
+canvas.onwheel = function(event){
+    event.preventDefault();
+};
+
+canvas.onmousewheel = function(event){
+    event.preventDefault();
+};
+
+const touch_map = new Map();
+canvas.addEventListener("touchstart",  function(event) {
+    event.preventDefault(); 
+});
+canvas.addEventListener("touchmove",   function(event) {
+    event.preventDefault();
+
+    let out = "[";
+    for (let i = 0; i < event.touches.length; i += 1) {
+        ctx.beginPath();
+        ctx.arc(event.touches[i].clientX, event.touches[i].clientY, 50, 0, 2 * Math.PI);
+        ctx.stroke();
+        out += "[" + event.touches[i].clientX + ", " + event.touches[i].clientY + "]";
+    }
+    out += "]";
+    console.log(out);
+    console.log(event)
+});
+canvas.addEventListener("touchend",    function(event) {
+    event.preventDefault();
+
+        let out = "[";
+    for (let i = 0; i < event.touches.length; i += 1) {
+
+        out += "[" + event.touches[i].clientX + ", " + event.touches[i].clientY + "]";
+    }
+    out += "]";
+    console.log(out);
+    console.log(event)
+
+});
+canvas.addEventListener("touchcancel", function(event) {
+    event.preventDefault();
+
+        let out = "[";
+    for (let i = 0; i < event.touches.length; i += 1) {
+        out += "[" + event.touches[i].clientX + ", " + event.touches[i].clientY + "]";
+    }
+    out += "]";
+    console.log(out);
+    console.log(event)
+});
+
+const socket = new WebSocket("wss://192.168.1.164:4444");
 socket.onopen = function(e) {
   alert("[open] Connection established");
   alert("Sending to server");
@@ -78,6 +138,25 @@ socket.onclose = function(event) {
 socket.onerror = function(error) {
   console.log(error);
 };
+
+(async () => {
+    try {
+  const rawResponse = await fetch('https://192.168.1.164:4443', {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({"msg:" : "THIS_IS_A_TEST"})
+  });
+  const content = await rawResponse.text();
+
+  console.log(content);
+} catch (e) {
+    console.error(e.message);
+}
+})();
+
 
       const pageSize = WASM.PAGE_SIZE;
       function heuristicIsBrowser64Bit() {
@@ -166,6 +245,8 @@ socket.onerror = function(error) {
                 } catch (e) {
                     console.error(e);
                 }
+
+                //ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             requestAnimationFrame(animate);
 

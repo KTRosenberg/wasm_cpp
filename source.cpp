@@ -21,7 +21,7 @@ int use_map() {
 	return (int)map.size();
 }
 
-extern_c_begin()
+extern_link_begin()
 
 
 extern unsigned char __heap_base;
@@ -48,4 +48,4 @@ int32 animate(long arg)
 	return size + map.size();
 }
 
-extern_c_end()
+extern_link_end()

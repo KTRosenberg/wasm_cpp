@@ -3,8 +3,6 @@ const express   = require('express');
 const argparse  = require('argparse');
 const path      = require('path');
 const WebSocket = require('ws')
-const basicAuth = require('express-basic-auth');
-
 /*
     Basic server for hosting the page
 */
@@ -59,9 +57,9 @@ console.log("enabled ssl:", args.enablessl);
 
 // currently unused options for SSL
 const options = {
-  key: ((args.enablessl) ? fs.readFileSync(path.join(__dirname, 'server.key')) : ''),
-  cert: ((args.enablessl) ? fs.readFileSync(path.join(__dirname, 'server.crt')) : ''),
-  requestCert: true,
+  key: ((args.enablessl) ? fs.readFileSync(path.join(__dirname, 'ca.key')) : ''),
+  cert: ((args.enablessl) ? fs.readFileSync(path.join(__dirname, 'ca.crt')) : ''),
+  requestCert: false,
   rejectUnauthorized: false
 };
 
@@ -80,8 +78,17 @@ const server = (args.enablessl) ?
 
 app.all('/', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
     next();
+});
+
+app.post('/', function(request, response) {
+  console.log('POST /')
+  console.dir(request.body)
+  response.writeHead(200, {'Content-Type': 'text/html'})
+  response.end('thanks')
 });
 
 if (!args.enablessl) {
@@ -89,12 +96,12 @@ if (!args.enablessl) {
         console.log('http server listening on port ' + port);
     });
 } else {
-    server.listen(443, () => {
+    server.listen(4443, () => {
         console.log('https server listening on port ' + server.address().port);
     });
 }
 
-const wss = new WebSocket.Server({ port: 444, server: server});
+const wss = new WebSocket.Server({ port: 4444, server: server, rejectUnauthorized: false, requestCert: false});
 console.log("WEE");
 wss.on('connection', ws => {
   ws.on('message', message => {
